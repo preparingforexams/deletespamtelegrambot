@@ -19,7 +19,7 @@ def default_handler(update: Update, context: CallbackContext, updater: Updater):
             message.forward(chat_id=-1001448278800)
             message.delete()
 
-            if not context.user_data["bot"]:
+            if not context.user_data.get("bot", False):
                 updater.bot.send_message(chat_id=message.chat_id,
                                          text=f"{update.effective_user.first_name} ist ein Boot und Merts Profilbild ist fake",
                                          disable_notification=True)
