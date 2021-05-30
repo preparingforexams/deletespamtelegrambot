@@ -1,7 +1,7 @@
 import os
 
-from telegram import Update
-from telegram.error import BadRequest
+from telegram import Update, Message, Bot, MessageEntity, Chat
+from telegram.error import BadRequest, TelegramError
 from telegram.ext import Updater, Filters, MessageHandler, CallbackContext
 
 BLOCKLIST = [word.lower().strip() for word in (os.getenv("BLOCKLIST") or "bit.ly/").split(",")]
@@ -10,22 +10,56 @@ BLOCKLIST = [word.lower().strip() for word in (os.getenv("BLOCKLIST") or "bit.ly
 def default_handler(update: Update, context: CallbackContext, updater: Updater):
     message = update.effective_message
     text = message.text if message.text else message.caption
+    if not text:
+        return
 
     print(f"Message ({text}) from {update.effective_user.first_name} in {message.chat_id}")
 
+    if is_spam(updater.bot, message, text):
+        handle_spam_message(update, context, updater)
+
+
+def is_spam(bot: Bot, message: Message, text: str) -> bool:
     if any(blocktext in text.lower() for blocktext in BLOCKLIST):
         print(f"delete message ({text}) due to substring 'bit.ly/'")
-        try:
-            if not context.user_data.get("bot", False):
-                message.forward(chat_id=-1001448278800)
-                updater.bot.send_message(chat_id=message.chat_id,
-                                         text=f"{update.effective_user.first_name} ist ein Boot und Merts Profilbild ist fake",
-                                         disable_notification=True)
+        return True
 
-            message.delete()
-            context.user_data["bot"] = True
-        except BadRequest as e:
-            print(e)
+    if any(
+        is_channel_mention(bot, entity, message.parse_entity) for entity in message.entities
+    ) or any(
+        is_channel_mention(bot, entity, message.parse_caption_entity) for entity in message.caption_entities
+    ):
+        print(f"delete message ({text}) due to channel mention'")
+        return True
+
+    return False
+
+
+def is_channel_mention(bot: Bot, entity: MessageEntity, parse_entity) -> bool:
+    if entity.type != MessageEntity.MENTION:
+        return False
+
+    mention: str = parse_entity(entity)
+    try:
+        chat: Chat = bot.get_chat(mention)
+    except TelegramError:
+        return False
+    else:
+        return chat.type != "private"
+
+
+def handle_spam_message(update: Update, context: CallbackContext, updater: Updater):
+    message = update.effective_message
+    try:
+        context.user_data["bot"] = True
+        message.forward(chat_id=-1001448278800)
+        message.delete()
+        updater.bot.kick_chat_member(
+            chat_id=message.chat_id,
+            user_id=message.from_user.id,
+        )
+    except BadRequest as e:
+        print(e)
 
 
 def main(token: str):
