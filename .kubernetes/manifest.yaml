@@ -4,7 +4,7 @@ metadata:
   namespace: telegram-bots
   name: spamkicker-token
 data:
-  TOKEN: 
+  TOKEN: {{TELEGRAM_TOKEN}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: spamkicker
-          image: torbencarstens/spamkicker:{{tag}}
+          image: ghcr.io/torbencarstens/deletespamtelegrambot:{{TAG}}
           imagePullPolicy: Always
           envFrom:
             - secretRef:
