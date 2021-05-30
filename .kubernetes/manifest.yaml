@@ -4,7 +4,7 @@ metadata:
   namespace: telegram-bots
   name: spamkicker-token
 data:
-  TOKEN: MTc2MDQzOTEyMTpBQUhPeGJiZDgzM2NuYW50LXpjVkRNb09aMEJYTzk5LTFSYw==
+  TOKEN: 
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -12,7 +12,7 @@ metadata:
   name: spamkicker-config
   namespace: telegram-bots
 data:
-  BLOCKLIST: "bit.ly/"
+  BLOCKLIST: "bit.ly/,wa.me/"
 ---
 apiVersion: apps/v1
 kind: Deployment
