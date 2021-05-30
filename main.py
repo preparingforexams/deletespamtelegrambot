@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.error import BadRequest
 from telegram.ext import Updater, Filters, MessageHandler, CallbackContext
 
-BLOCKLIST = [word.lower() for word in (os.getenv("BLOCKLIST") or "bit.ly/").split(",")]
+BLOCKLIST = [word.lower().strip() for word in (os.getenv("BLOCKLIST") or "bit.ly/").split(",")]
 
 
 def default_handler(update: Update, context: CallbackContext, updater: Updater):
