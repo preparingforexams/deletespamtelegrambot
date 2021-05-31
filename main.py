@@ -67,7 +67,7 @@ def main(token: str):
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(MessageHandler(Filters.all, lambda u, c: default_handler(u, c, updater)))
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.video | Filters.audio | Filters.photo), lambda u, c: default_handler(u, c, updater)))
     updater.start_polling()
     updater.idle()
 
