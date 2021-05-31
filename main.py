@@ -20,8 +20,9 @@ def default_handler(update: Update, context: CallbackContext, updater: Updater):
 
 
 def is_spam(bot: Bot, message: Message, text: str) -> bool:
-    if any(blocktext in text.lower() for blocktext in BLOCKLIST):
-        print(f"delete message ({text}) due to substring 'bit.ly/'")
+    blocked_texts = [blocktext for blocktext in BLOCKLIST if blocktext in text.lower()]
+    if blocked_texts:
+        print(f"delete message ({text}) due to substring(s) {blocked_texts}")
         return True
 
     if any(
