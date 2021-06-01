@@ -20,8 +20,9 @@ def default_handler(update: Update, context: CallbackContext, updater: Updater):
 
 
 def is_spam(bot: Bot, message: Message, text: str) -> bool:
-    if any(blocktext in text.lower() for blocktext in BLOCKLIST):
-        print(f"delete message ({text}) due to substring 'bit.ly/'")
+    blocked_texts = [blocktext for blocktext in BLOCKLIST if blocktext in text.lower()]
+    if blocked_texts:
+        print(f"delete message ({text}) due to substring(s) {blocked_texts}")
         return True
 
     if any(
@@ -66,7 +67,7 @@ def main(token: str):
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(MessageHandler(Filters.all, lambda u, c: default_handler(u, c, updater)))
+    dispatcher.add_handler(MessageHandler((Filters.text | Filters.video | Filters.audio | Filters.photo), lambda u, c: default_handler(u, c, updater)))
     updater.start_polling()
     updater.idle()
 
