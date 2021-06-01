@@ -1,4 +1,5 @@
 import os
+import re
 
 from telegram import Update, Message, Bot, MessageEntity, Chat
 from telegram.error import BadRequest, TelegramError
@@ -26,10 +27,10 @@ def is_spam(bot: Bot, message: Message, text: str) -> bool:
         return True
 
     if any(
-        is_channel_mention(bot, entity, message.parse_entity)
+        is_spam_entity(bot, entity, message.parse_entity)
         for entity in message.entities
     ) or any(
-        is_channel_mention(bot, entity, message.parse_caption_entity)
+        is_spam_entity(bot, entity, message.parse_caption_entity)
         for entity in message.caption_entities
     ):
         print(f"delete message ({text}) due to channel mention'")
@@ -38,17 +39,27 @@ def is_spam(bot: Bot, message: Message, text: str) -> bool:
     return False
 
 
-def is_channel_mention(bot: Bot, entity: MessageEntity, parse_entity) -> bool:
-    if entity.type != MessageEntity.MENTION:
-        return False
+def is_spam_entity(bot: Bot, entity: MessageEntity, parse_entity) -> bool:
+    parsed_entity: str = parse_entity(entity)
+    if entity.type == MessageEntity.MENTION:
+        return is_spam_mention(bot, parsed_entity)
+    if entity.type == MessageEntity.PHONE_NUMBER:
+        return is_spam_phone_number(parsed_entity)
+    return False
 
-    mention: str = parse_entity(entity)
+
+def is_spam_mention(bot: Bot, mention: str) -> bool:
     try:
         chat: Chat = bot.get_chat(mention)
     except TelegramError:
         return False
     else:
         return chat.type != "private"
+
+
+def is_spam_phone_number(number: str) -> bool:
+    # Match +33 or 033 (with any number of leading zeroes)
+    return bool(re.fullmatch(r"^(\+|0+)33.*", number))
 
 
 def handle_spam_message(update: Update, context: CallbackContext, updater: Updater):
