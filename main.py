@@ -26,9 +26,11 @@ def is_spam(bot: Bot, message: Message, text: str) -> bool:
         return True
 
     if any(
-        is_channel_mention(bot, entity, message.parse_entity) for entity in message.entities
+        is_channel_mention(bot, entity, message.parse_entity)
+        for entity in message.entities
     ) or any(
-        is_channel_mention(bot, entity, message.parse_caption_entity) for entity in message.caption_entities
+        is_channel_mention(bot, entity, message.parse_caption_entity)
+        for entity in message.caption_entities
     ):
         print(f"delete message ({text}) due to channel mention'")
         return True
@@ -67,7 +69,10 @@ def main(token: str):
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(MessageHandler((Filters.text | Filters.video | Filters.audio | Filters.photo), lambda u, c: default_handler(u, c, updater)))
+    dispatcher.add_handler(MessageHandler(
+        Filters.text | Filters.video | Filters.audio | Filters.photo,
+        lambda u, c: default_handler(u, c, updater),
+    ))
     updater.start_polling()
     updater.idle()
 
