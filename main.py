@@ -8,6 +8,10 @@ from telegram.ext import Updater, Filters, MessageHandler, CallbackContext
 BLOCKLIST = [word.lower().strip() for word in (os.getenv("BLOCKLIST") or "bit.ly/").split(",")]
 
 
+def new_member_handler(update: Update, context: CallbackContext, updater: Updater):
+    update.effective_message.delete()
+
+
 def default_handler(update: Update, context: CallbackContext, updater: Updater):
     message = update.effective_message
     text = message.text if message.text else message.caption
@@ -84,6 +88,9 @@ def main(token: str):
         Filters.text | Filters.video | Filters.audio | Filters.photo,
         lambda u, c: default_handler(u, c, updater),
     ))
+    dispatcher.add_handler(
+        MessageHandler(Filters.status_update.new_chat_members, lambda u, c: new_member_handler(u, c, updater)))
+
     updater.start_polling()
     updater.idle()
 
