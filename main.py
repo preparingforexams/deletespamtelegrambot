@@ -70,7 +70,6 @@ def handle_spam_message(update: Update, context: CallbackContext, updater: Updat
     message = update.effective_message
     try:
         context.user_data["bot"] = True
-        message.forward(chat_id=-1001448278800)
         message.delete()
         updater.bot.kick_chat_member(
             chat_id=message.chat_id,
