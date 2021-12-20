@@ -1,0 +1,21 @@
+namespace: telegram-bots
+
+deployment:
+  name: deletespambot
+  image: ghcr.io/preparingforexams/deletespambot:__TAG__
+  imagePullPolicy: IfNotPresent
+  revisionHistoryLimit: 1
+  replicas: 1
+  labels:
+    app: deletespambot
+  requests:
+    cpu: 50m
+    memory: 50Mi
+
+configmap:
+  name: deletespambot-config
+  blocklist: "bit.ly/,wa.me/"
+
+secret:
+  name: deletespambot-telegram-token
+  token: __TELEGRAM_TOKEN__
