@@ -96,4 +96,4 @@ def main(token: str):
     updater.idle()
 
 
-main(os.getenv("TOKEN"))
+main(os.getenv("BOT_TOKEN"))

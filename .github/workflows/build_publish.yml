@@ -6,6 +6,18 @@ on:
       - master
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
+      - uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm lint
+      - uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm lint --strict
+
   build_push_docker:
     runs-on: ubuntu-latest
     steps:
@@ -16,22 +28,22 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: sed -i -e "s/{{VERSION}}/${GITHUB_SHA}/g" telegram_bot/bot.py
       - name: Build the tagged Docker image
-        run: docker build -t ghcr.io/torbencarstens/deletespamtelegrambot:${GITHUB_SHA} .
+        run: docker build -t ghcr.io/preparingforexams/deletespambot:${GITHUB_SHA} .
       - name: Push the tagged Docker image
-        run: docker push ghcr.io/torbencarstens/deletespamtelegrambot:${GITHUB_SHA}
+        run: docker push ghcr.io/preparingforexams/deletespambot:${GITHUB_SHA}
+
   deploy:
     name: "Publish to k8s"
     runs-on: ubuntu-latest
-    needs: build_push_docker
+    needs: [lint, build_push_docker]
     steps:
       - uses: actions/checkout@v2
-      - name: update tag in manifest.yml
-        run: sed -i -e "s#{{TAG}}#$(echo ${GITHUB_SHA})#g" .kubernetes/manifest.yaml
-      - name: update token
-        run: sed -i -e "s#{{TELEGRAM_TOKEN}}#${{ secrets.TELEGRAM_TOKEN }}#g" .kubernetes/manifest.yaml
-      - uses: danielr1996/kubectl-action@1.0.0
-        name: apply config
+      - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.TELEGRAM_TOKEN }}/g" values.yaml
+      - run: sed -i -e "s/__TAG__/${GITHUB_SHA}/g" values.yaml
+      - name: install helm chart
+        uses: WyriHaximus/github-action-helm3@v2
         with:
-          kubeconfig: ${{ secrets.KUBECONFIG }}
-          args: apply -f .kubernetes/manifest.yaml
+          exec: helm upgrade deletespambot . --install --namespace=telegram-bots --atomic
+          kubeconfig: ${{ secrets.KUBECONFIG_RAW }}
