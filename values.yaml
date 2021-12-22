@@ -14,7 +14,7 @@ deployment:
 
 configmap:
   name: deletespambot-config
-  blocklist: "bit.ly/,wa.me/"
+  blocklist: "bit.ly/,wa.me/,me.sv/"
 
 secret:
   name: deletespambot-telegram-token
